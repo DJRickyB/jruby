@@ -20,6 +20,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
 import java.lang.invoke.SwitchPoint;
+import java.util.Arrays;
 
 import static java.lang.invoke.MethodHandles.guardWithTest;
 import static org.jruby.util.CodegenUtils.p;
@@ -100,7 +101,14 @@ public class ConstantLookupSite extends MutableCallSite {
                 .insert(0, this)
                 .invokeVirtualQuiet(Bootstrap.LOOKUP, "searchConst");
 
-        setTarget(switchPoint.guardWithTest(target, fallback));
+        try {
+            setTarget(switchPoint.guardWithTest(target, fallback));
+        } catch (Throwable t) {
+            t.printStackTrace();
+            t.getCause().printStackTrace();
+            Arrays.stream(t.getSuppressed()).forEach((t2)->t2.printStackTrace());
+            throw t;
+        }
 
         if (Options.INVOKEDYNAMIC_LOG_CONSTANTS.load()) {
             LOG.info(name + "\tretrieved and cached from scope (searchConst) " + staticScope.getIRScope());
